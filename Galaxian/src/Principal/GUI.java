@@ -14,6 +14,10 @@ public class GUI extends JFrame{
 
 	private JLabel [] labelPuntaje;
 	private JLabel labelVida,finPartidaGanar,finPartidaPerder;
+	private JButton menuButton;
+	private JDialog menuDialog;
+	private JButton restartButton;
+	private JButton exitButton;
 	private Juego j;
 	private JPanel panelFinPartida;
 	
@@ -78,7 +82,27 @@ public class GUI extends JFrame{
 	       	getContentPane().add(labelPuntaje[i]);
 	    }
 	      
-	       
+	    
+	    menuButton = new JButton("Menu");
+	    menuButton.setBounds(70, 0, 100, 50);
+	    menuButton.addActionListener(new OyenteAbrirMenu());
+	    menuButton.setFocusable(false);
+	    getContentPane().add(menuButton);
+	    
+	    restartButton = new JButton("Reiniciar");
+	    restartButton.addActionListener(new OyenteReiniciarJuego());
+	    restartButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+	    exitButton = new JButton("Salir");
+	    exitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+	    exitButton.addActionListener(new oyenteSalir());
+	    
+	    menuDialog = new JDialog();
+		menuDialog.setSize(200, 100);
+		menuDialog.setLocationRelativeTo(null);
+		menuDialog.getContentPane().setLayout(new BoxLayout(menuDialog.getContentPane(), BoxLayout.PAGE_AXIS));
+		menuDialog.getContentPane().add(exitButton);
+		menuDialog.getContentPane().add(restartButton);
+	    
 	    //LABEL VIDA
 	    labelVida= new JLabel();
 	    labelVida.setBounds(0,0,100,50);
@@ -187,6 +211,7 @@ public class GUI extends JFrame{
 
 	private class oyenteSalir implements ActionListener{
 		public void actionPerformed(ActionEvent evt) {
+			menuDialog.setVisible(false);
 			cerrar();
 		}
 	}
@@ -195,7 +220,14 @@ public class GUI extends JFrame{
 		public void actionPerformed(ActionEvent evt) {
 			GUIMenu menu= new GUIMenu();
 			menu.setVisible(true);
+			menuDialog.setVisible(false);
 			cerrar();
+		}
+	}
+	
+	private class OyenteAbrirMenu implements ActionListener {
+		public void actionPerformed(ActionEvent evt) {
+			menuDialog.setVisible(true);
 		}
 	}
 }
