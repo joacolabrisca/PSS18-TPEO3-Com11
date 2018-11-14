@@ -6,6 +6,8 @@ import java.awt.event.*;
 
 public class GUI extends JFrame{
 	
+	private User user;
+	
 	private static final long serialVersionUID = 1L;
 	
 	private Key left = new Key();
@@ -33,7 +35,10 @@ public class GUI extends JFrame{
         }
 	}
 	
-	public GUI() {
+	public GUI(User user) {
+		
+		this.user = user;
+		
 		setResizable(false);
 		getContentPane().setBackground(new Color(0, 0, 0));
 		setBounds(new Rectangle(100, 20, 600, 700));
@@ -44,12 +49,9 @@ public class GUI extends JFrame{
 		armarLabelFinPartida();
 		armarPanelJuego();
 		
-		
 		panelFinPartida = new JPanel();
 		panelFinPartida.setBounds(0, 0, 600, 700);
 		panelFinPartida.setLayout(null);
-		
-		
 		
 		iniciarHilos();		
 	}

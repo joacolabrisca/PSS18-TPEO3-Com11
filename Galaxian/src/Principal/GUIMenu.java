@@ -3,15 +3,25 @@ package Principal;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.util.LinkedList;
+
 import javax.swing.*;
 
 public class GUIMenu extends JFrame{
-	private static final long serialVersionUID = 1L;
 	
-	private JButton bJugar,bSalir;
+	private static final long serialVersionUID = 1L;
+	private JButton bJugar,bSalir,bSesion;
 	private JPanel panel;
-
+	private User user;
+	
 	public GUIMenu() {
+		
+		user = new User("", 0);
 		
 		setResizable(false);
 		setBounds(100, 20, 600, 700);
@@ -24,6 +34,15 @@ public class GUIMenu extends JFrame{
 		imagenFondo.setLocation(0, 0);
 		panel.add(imagenFondo);
 		getContentPane().add(panel);
+		
+		bSesion = new JButton();
+		bSesion.setBorder(null);
+		bSesion.setBackground(new Color(0, 0, 0));
+		bSesion.setIcon(new ImageIcon(GUIMenu.class.getResource("/img/login.png")));
+		bSesion.setBounds(185, 250, 230, 50);
+		oyenteSesion ose= new oyenteSesion();
+		bSesion.addActionListener(ose);
+		panel.add(bSesion);
 		
 		bJugar = new JButton();
 		bJugar.setBorder(null);
@@ -42,28 +61,187 @@ public class GUIMenu extends JFrame{
 		oyenteSalir os= new oyenteSalir();
 		bSalir.addActionListener(os);
 		panel.add(bSalir);
-		
-		
 	}
 	
-	private void cerrar() {
-		this.setVisible(false);
-		this.dispose();
+	private class LoginForm extends JFrame{
+		
+		JLabel usernameLabel, passwordLabel;
+		JTextField usernameField;
+		JButton botonLogin;
+		JPasswordField passwordField;
+		JFrame frame;
+		
+		LoginForm(){
+		
+		  frame = new JFrame("Enter Username and Password");
+		  usernameLabel = new JLabel("Username");
+		  passwordLabel = new JLabel("Password");
+		  usernameField = new JTextField();
+		  passwordField = new JPasswordField();
+		  botonLogin = new JButton("Login");
+		  OyenteBotonLogin oblg = new OyenteBotonLogin();
+		  botonLogin.addActionListener(oblg);
+		  
+		  usernameLabel.setBounds(10, 10, 200, 30);
+		  passwordLabel.setBounds(10, 40, 200, 30);
+		  usernameField.setBounds(80, 10, 200, 30);
+		  passwordField.setBounds(80, 40, 200, 30);
+		  botonLogin.setBounds(95, 80, 100, 30);
+		 
+		  frame.add(usernameLabel);
+		  frame.add(usernameField);
+		  frame.add(passwordLabel);
+		  frame.add(passwordField);
+		  frame.add(botonLogin);
+		 
+		  frame.setBounds(250, 150, 300, 150);
+		  frame.setResizable(false);
+		  frame.setLayout(null);
+		  frame.setVisible(true);
+		  
+		 }
+		 
+		 class OyenteBotonLogin implements ActionListener{
+			
+			public void actionPerformed(ActionEvent evt){
+				
+				String userName = usernameField.getText();
+				char[] passwordIngresada = passwordField.getPassword();
+				
+				if(!userName.equals("") && !java.util.Arrays.equals(passwordIngresada, "".toCharArray())) {
+				
+					char[] passwordArchivo = getFilePassword(userName.toCharArray());
+					
+					if(java.util.Arrays.equals(passwordIngresada, passwordArchivo)){
+						
+					     user.setUsername(userName);
+					     JOptionPane.showMessageDialog(panel,
+					    		    "Bienvenido " + userName + "!");
+					    
+					     frame.dispose();
+					}				
+					
+					else{
+						
+					    JOptionPane.showMessageDialog(panel,
+					    		"Nombre de usuario o contraseña incorrectos",
+					    		"Error",
+					    		JOptionPane.ERROR_MESSAGE);
+					}
+				}
+	        }
+			
+			private char[] getFilePassword(char[] usuarioIngresado){
+				
+				LinkedList<String> usuarios = readUsersFile();
+				String password = "";
+						
+				for(String usuario : usuarios) {
+					
+					String username = getUsername(usuario.toCharArray());
+					char[] usernameChar = username.toCharArray();
+					
+				    if(java.util.Arrays.equals(usernameChar, usuarioIngresado)) {
+				    	password = getPassword(usuario.toCharArray());
+				    	break;
+				    }
+				}
+				
+				
+				return password.toCharArray();
+			}
+			
+			private String getUsername(char[] linea) {
+				
+				String username = "";
+				int i = 0;
+				boolean listo = false;
+				
+				while(!listo & i < linea.length) {
+					if(linea[i] != '&') {
+						username += linea[i];
+						i++;
+					}
+					else {
+						listo = true;
+					}
+				}
+				
+				return username;
+			}
+			
+			private String getPassword(char[] linea) {
+				
+				String password = "";
+				int i = 0;
+				
+				while(linea[i] != '&')
+					i++;
+				i++;
+				
+				while(i < linea.length) {
+					password += linea[i];
+					i++;
+				}
+				
+				return password;
+			}
+			
+			private LinkedList<String> readUsersFile(){
+				
+				String ruta = "users.txt";
+				LinkedList<String> usuarios = new LinkedList<String>();
+				
+				try {
+					
+					File users = new File(ruta);
+				    BufferedReader reader = new BufferedReader(new FileReader(users));
+				    String line;
+				    
+				    while ((line = reader.readLine()) != null)
+				    	usuarios.add(line);
+				    
+				    reader.close();
+				    
+				    return usuarios;
+				  }
+				  
+				  catch (Exception e) {
+					  
+				    System.err.format("Exception occurred trying to read '%s'.", "/PSS18-TPEO3-Com11/Galaxian/src/Data/users.txt");
+				    e.printStackTrace();
+				    return null;
+				  }
+			}
+		}
 	}
 	
 	////OYENTES
+	private class oyenteSesion implements ActionListener{
+		
+		public void actionPerformed(ActionEvent evt){
+			
+			LoginForm loginform = new LoginForm();
+        }
+	}
+	
 	private class oyenteJugar implements ActionListener{
 		
 		public void actionPerformed(ActionEvent evt){
-			GUI game= new GUI();
+			GUI game= new GUI(user);
 			game.setVisible(true);
 			cerrar();
-        }	
+        }
 	}
 	
 	private class oyenteSalir implements ActionListener{
 		public void actionPerformed(ActionEvent evt) {
 			cerrar();
 		}
+	}
+
+	private void cerrar(){
+		this.setVisible(false);
+		this.dispose();
 	}
 }
