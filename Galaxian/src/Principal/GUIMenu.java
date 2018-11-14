@@ -3,12 +3,17 @@ package Principal;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import javax.swing.*;
 
 public class GUIMenu extends JFrame{
 	private static final long serialVersionUID = 1L;
 	
 	private JButton bJugar,bSalir;
+	private JDialog comentariosDialog;
+	private JTextField comentariosText;
 	private JPanel panel;
 
 	public GUIMenu() {
@@ -43,6 +48,29 @@ public class GUIMenu extends JFrame{
 		bSalir.addActionListener(os);
 		panel.add(bSalir);
 		
+		JButton bComentarios = new JButton();
+		bComentarios.setBorder(null);
+		bComentarios.setBackground(new Color(0, 0, 0));
+		bComentarios.setBounds(0, 600, 260, 50);
+		bComentarios.addActionListener(new oyenteAgregarComentarios());
+		bComentarios.setIcon(new ImageIcon(GUIMenu.class.getResource("/img/enviarcomentario.png")));
+		panel.add(bComentarios);
+		
+		
+		comentariosText = new JTextField();
+		comentariosText.setAlignmentX(Component.CENTER_ALIGNMENT);
+		JButton enviarButton = new JButton("Enviar");
+		enviarButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+		enviarButton.addActionListener(new oyenteEnviarComentarios());
+		
+		comentariosDialog = new JDialog();
+		comentariosDialog.setSize(200, 100);
+		comentariosDialog.setLocationRelativeTo(null);
+		comentariosDialog.getContentPane().setLayout(new BoxLayout(comentariosDialog.getContentPane(), BoxLayout.PAGE_AXIS));
+		comentariosDialog.getContentPane().add(comentariosText);
+		comentariosDialog.getContentPane().add(enviarButton);
+		
+		
 		
 	}
 	
@@ -64,6 +92,28 @@ public class GUIMenu extends JFrame{
 	private class oyenteSalir implements ActionListener{
 		public void actionPerformed(ActionEvent evt) {
 			cerrar();
+		}
+	}
+	
+	private class oyenteAgregarComentarios implements ActionListener{
+		public void actionPerformed(ActionEvent evt) {
+			comentariosDialog.setVisible(true);
+		}
+	}
+	
+	private class oyenteEnviarComentarios implements ActionListener{
+		public void actionPerformed(ActionEvent evt) {
+			comentariosDialog.setVisible(false);
+			StringBuilder builder = new StringBuilder(comentariosText.getText());
+			builder.append(System.lineSeparator());
+			try {
+				BufferedWriter writer = new BufferedWriter(new FileWriter("comentarios.txt", true));
+				writer.append(builder.toString());
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			comentariosText.setText("");
 		}
 	}
 }
