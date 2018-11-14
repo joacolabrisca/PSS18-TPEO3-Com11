@@ -9,19 +9,22 @@ import java.io.FileReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.LinkedList;
-
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import javax.swing.*;
 
 public class GUIMenu extends JFrame{
 	
+
 	private static final long serialVersionUID = 1L;
 	private JButton bJugar,bSalir,bSesion;
+	private JDialog comentariosDialog;
+	private JTextField comentariosText;
 	private JPanel panel;
 	private User user;
 	
-	public GUIMenu() {
-		
-		user = new User("", 0);
+	public GUIMenu(){
 		
 		setResizable(false);
 		setBounds(100, 20, 600, 700);
@@ -61,6 +64,35 @@ public class GUIMenu extends JFrame{
 		oyenteSalir os= new oyenteSalir();
 		bSalir.addActionListener(os);
 		panel.add(bSalir);
+		
+		JButton bCerrarSesion = new JButton();
+		bCerrarSesion.setBorder(null);
+		bCerrarSesion.setBackground(new Color(0, 0, 0));
+		bCerrarSesion.setBounds(500, 575, 60, 80);
+		bCerrarSesion.addActionListener(new oyenteCerrarSesion());
+		bCerrarSesion.setIcon(new ImageIcon(GUIMenu.class.getResource("/img/logout.png")));
+		panel.add(bCerrarSesion);
+		
+		JButton bComentarios = new JButton();
+		bComentarios.setBorder(null);
+		bComentarios.setBackground(new Color(0, 0, 0));
+		bComentarios.setBounds(0, 600, 260, 50);
+		bComentarios.addActionListener(new oyenteAgregarComentarios());
+		bComentarios.setIcon(new ImageIcon(GUIMenu.class.getResource("/img/enviarcomentario.png")));
+		panel.add(bComentarios);
+		
+		comentariosText = new JTextField();
+		comentariosText.setAlignmentX(Component.CENTER_ALIGNMENT);
+		JButton enviarButton = new JButton("Enviar");
+		enviarButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+		enviarButton.addActionListener(new oyenteEnviarComentarios());
+		
+		comentariosDialog = new JDialog();
+		comentariosDialog.setSize(200, 100);
+		comentariosDialog.setLocationRelativeTo(null);
+		comentariosDialog.getContentPane().setLayout(new BoxLayout(comentariosDialog.getContentPane(), BoxLayout.PAGE_AXIS));
+		comentariosDialog.getContentPane().add(comentariosText);
+		comentariosDialog.getContentPane().add(enviarButton);
 	}
 	
 	private class LoginForm extends JFrame{
@@ -72,7 +104,7 @@ public class GUIMenu extends JFrame{
 		JFrame frame;
 		
 		LoginForm(){
-		
+			
 		  frame = new JFrame("Enter Username and Password");
 		  usernameLabel = new JLabel("Username");
 		  passwordLabel = new JLabel("Password");
@@ -102,27 +134,23 @@ public class GUIMenu extends JFrame{
 		 }
 		 
 		 class OyenteBotonLogin implements ActionListener{
-			
 			public void actionPerformed(ActionEvent evt){
-				
 				String userName = usernameField.getText();
 				char[] passwordIngresada = passwordField.getPassword();
-				
 				if(!userName.equals("") && !java.util.Arrays.equals(passwordIngresada, "".toCharArray())) {
-				
 					char[] passwordArchivo = getFilePassword(userName.toCharArray());
-					
 					if(java.util.Arrays.equals(passwordIngresada, passwordArchivo)){
-						
-					     user.setUsername(userName);
+					     user = new User(userName, 0);
 					     JOptionPane.showMessageDialog(panel,
 					    		    "Bienvenido " + userName + "!");
-					    
 					     frame.dispose();
-					}				
-					
+					     if(userName.equals("admin")) {
+					    	 String textToPanel = getComments();
+					    	 JOptionPane.showMessageDialog(panel,
+					    			 textToPanel);
+					     }
+					}
 					else{
-						
 					    JOptionPane.showMessageDialog(panel,
 					    		"Nombre de usuario o contraseña incorrectos",
 					    		"Error",
@@ -132,31 +160,23 @@ public class GUIMenu extends JFrame{
 	        }
 			
 			private char[] getFilePassword(char[] usuarioIngresado){
-				
 				LinkedList<String> usuarios = readUsersFile();
 				String password = "";
-						
 				for(String usuario : usuarios) {
-					
 					String username = getUsername(usuario.toCharArray());
 					char[] usernameChar = username.toCharArray();
-					
 				    if(java.util.Arrays.equals(usernameChar, usuarioIngresado)) {
 				    	password = getPassword(usuario.toCharArray());
 				    	break;
 				    }
 				}
-				
-				
 				return password.toCharArray();
 			}
 			
 			private String getUsername(char[] linea) {
-				
 				String username = "";
 				int i = 0;
 				boolean listo = false;
-				
 				while(!listo & i < linea.length) {
 					if(linea[i] != '&') {
 						username += linea[i];
@@ -171,43 +191,31 @@ public class GUIMenu extends JFrame{
 			}
 			
 			private String getPassword(char[] linea) {
-				
 				String password = "";
 				int i = 0;
-				
 				while(linea[i] != '&')
 					i++;
 				i++;
-				
 				while(i < linea.length) {
 					password += linea[i];
 					i++;
 				}
-				
 				return password;
 			}
 			
 			private LinkedList<String> readUsersFile(){
-				
 				String ruta = "users.txt";
 				LinkedList<String> usuarios = new LinkedList<String>();
-				
 				try {
-					
 					File users = new File(ruta);
 				    BufferedReader reader = new BufferedReader(new FileReader(users));
 				    String line;
-				    
 				    while ((line = reader.readLine()) != null)
 				    	usuarios.add(line);
-				    
 				    reader.close();
-				    
 				    return usuarios;
 				  }
-				  
 				  catch (Exception e) {
-					  
 				    System.err.format("Exception occurred trying to read '%s'.", "/PSS18-TPEO3-Com11/Galaxian/src/Data/users.txt");
 				    e.printStackTrace();
 				    return null;
@@ -216,19 +224,51 @@ public class GUIMenu extends JFrame{
 		}
 	}
 	
+	private String getComments() {
+		String ruta = "comentarios.txt";
+		String comments = "";
+		try {
+			File commentsFile = new File(ruta);
+		    BufferedReader reader = new BufferedReader(new FileReader(commentsFile));
+		    String line;
+		    while ((line = reader.readLine()) != null) {
+		    	line += "\n";
+		    	comments += line;
+		    }
+		    reader.close();
+		    return comments;
+		  }
+		  catch (Exception e) {
+		    System.err.format("Exception occurred trying to read '%s'.", "comentarios.txt");
+		    e.printStackTrace();
+		    return null;
+		  }
+	}
+
+	private void cerrar(){
+		this.setVisible(false);
+		this.dispose();
+	}
+	
 	////OYENTES
 	private class oyenteSesion implements ActionListener{
 		
 		public void actionPerformed(ActionEvent evt){
-			
 			LoginForm loginform = new LoginForm();
         }
+	}
+	
+	private class oyenteCerrarSesion implements ActionListener{
+		
+		public void actionPerformed(ActionEvent evt){
+			user = null;
+		}
 	}
 	
 	private class oyenteJugar implements ActionListener{
 		
 		public void actionPerformed(ActionEvent evt){
-			GUI game= new GUI(user);
+			GUI game = new GUI(user);
 			game.setVisible(true);
 			cerrar();
         }
@@ -239,9 +279,27 @@ public class GUIMenu extends JFrame{
 			cerrar();
 		}
 	}
-
-	private void cerrar(){
-		this.setVisible(false);
-		this.dispose();
+	
+	private class oyenteAgregarComentarios implements ActionListener{
+		public void actionPerformed(ActionEvent evt) {
+			comentariosDialog.setVisible(true);
+		}
+	}
+	
+	private class oyenteEnviarComentarios implements ActionListener{
+		public void actionPerformed(ActionEvent evt) {
+			comentariosDialog.setVisible(false);
+			StringBuilder builder = new StringBuilder(comentariosText.getText());
+			builder.append(System.lineSeparator());
+			try {
+				BufferedWriter writer = new BufferedWriter(new FileWriter("comentarios.txt", true));
+				writer.append(builder.toString());
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			comentariosText.setText("");
+		}
 	}
 }
+
